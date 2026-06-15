@@ -26,21 +26,36 @@ public class CamundaRequest extends AbstractConnectorRequest<CamundaResponse> {
 
     @Override
     public CamundaResponse execute() {
-            String url = getRequestParameter("url");
-            String method = getRequestParameter("method");
-            String payload = getRequestParameter("payload");
+        String url = getRequestParameter("url");
+        String method = getRequestParameter("method");
+        String payload = getRequestParameter("payload");
+        Map<String, String> headers = getRequestParameter("headers");
 
-            if (url == null || url.isBlank()) {
-                throw new IllegalArgumentException("Url cannot be empty");
-            }
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("Url cannot be empty");
+        }
 
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(url.trim()))
                     .timeout(Duration.ofSeconds(30));
 
-            requestBuilder.header("Content-type", "application/json");
-            requestBuilder.header("Accept", "application/json");
+            if(headers != null && !headers.isEmpty()){
+                if(!headers.containsKey("Content-type")){
+                    requestBuilder.header("Content-type", "application/json");
+                }
+
+                if(!headers.containsKey("Accept")){
+                    requestBuilder.header("Accept", "application/json");
+                }
+
+                for (String header: headers.keySet()){
+                    requestBuilder.header(header, headers.get(header));
+                }
+            }else{
+                requestBuilder.header("Content-type", "application/json");
+                requestBuilder.header("Accept", "application/json");
+            }
 
             if(CamundaConnector.camundaKey != null){
                 requestBuilder.header("Camunda-Header", CamundaConnector.camundaKey);
